@@ -99,16 +99,15 @@ static const CGFloat DefaultScreenWidth = 320.f;
 
 -(void)calculateShift{
 
-    //注意这里用到的一个技巧
+    //注意这里用到的一个技巧,当往下滑动tableview时，self.scrollView.contentOffset.y为负值，将其赋给self的高度会有带来两个效果，一是其高度变为abs（self.scrollView.contentOffset.y），二是其会相对父视图移动self.scrollView.contentOffset.y，即最后self在父视图中的y的位置为0.f（0.f是这个setFrame设置的origin的y值）+self.scrollView.contentOffset.y
     [self setFrame:CGRectMake(0.f,
                               0.f,
                               self.scrollView.frame.size.width,
                               self.scrollView.contentOffset.y)];
     
     if(self.scrollView.contentOffset.y <= -DefaultHeight){
-        
+        //通过下面这个if语句可以防止table view无限下拉
         if(self.scrollView.contentOffset.y < -SpringTreshold){
-            
             [self.scrollView setContentOffset:CGPointMake(0.f, -SpringTreshold)];
         }
         [self scaleItems];
@@ -121,8 +120,10 @@ static const CGFloat DefaultScreenWidth = 320.f;
     }
    
     if(!self.scrollView.dragging && self.forbidSunSet && self.scrollView.decelerating && !self.forbidOffsetChanges){
-        
-        [self.scrollView setContentOffset:CGPointMake(0.f, -DefaultHeight) animated:YES];
+        //下面这一行代码是原作者的
+        //        [self.scrollView setContentOffset:CGPointMake(0.f, -DefaultHeight) animated:YES];
+        //当table view下滑到超过SpringThreshold时，当松手的时候，为了不让table view弹回到原点，通过设置table view的contentinset来实现，这个方法可以好好思考一下，用的比较妙，下面这行代码是我加的，原作者是在下面的scrollViewDidEndScrollingAnimation方法中设置的这行代码
+        [self.scrollView setContentInset:UIEdgeInsetsMake(DefaultHeight, 0.f, 0.f, 0.f)];
         self.forbidOffsetChanges = YES;
     }
     
@@ -142,6 +143,7 @@ static const CGFloat DefaultScreenWidth = 320.f;
           initialSpringVelocity:AnimationVelosity
                         options:UIViewAnimationOptionCurveLinear
                      animations:^{
+                         //将table view弹回去
                          [self.scrollView setContentInset:UIEdgeInsetsMake(0, 0.f, 0.f, 0.f)];
                      } completion:^(BOOL finished) {
                          
@@ -183,7 +185,7 @@ static const CGFloat DefaultScreenWidth = 320.f;
         CGFloat extraOffset = ABS(self.scrollView.contentOffset.y) - DefaultHeight;
         //building图片还有一个相对父视图的top的自动布局约束，通过调整它的高度的约束，因为有相对于父视图top的约束，这时building的top跟父视图的top是不会改变的，building的bottom会往下移，当往下滑tableview的时候
         self.buildingsHeightConstraint.constant = BuildingDefaultHeight + extraOffset;
-        [self.buildingsImageView setTransform:CGAffineTransformMakeScale(buildigsScaleRatio,1.f)];
+        [self.buildingsImageView setTransform:CGAffineTransformMakeScale(buildigsScaleRatio,1.f)];  //x轴方向拉伸
         
         CGFloat skyScale = (SunAndSkyMinimumScale + (1 - buildigsScaleRatio));
         [UIView animateWithDuration:SkyTransformAnimationDuration animations:^{
@@ -199,6 +201,7 @@ static const CGFloat DefaultScreenWidth = 320.f;
     if(!self.isSunRotating){
         self.isSunRotating = YES;
         self.forbidSunSet = YES;
+        //看一下这里
         CABasicAnimation *rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
         rotationAnimation.toValue = @(M_PI * 2.0);
         rotationAnimation.duration = SunRotationAnimationDuration;
@@ -216,11 +219,12 @@ static const CGFloat DefaultScreenWidth = 320.f;
     [self.sunImageView.layer removeAnimationForKey:@"rotationAnimation"];
 }
 
+//这个函数我修改了，可以将下面的设置放到calculateShift方法中去
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView{
     
     if(self.forbidOffsetChanges){
-        
-        [self.scrollView setContentInset:UIEdgeInsetsMake(DefaultHeight, 0.f, 0.f, 0.f)];
+//        
+//        [self.scrollView setContentInset:UIEdgeInsetsMake(DefaultHeight, 0.f, 0.f, 0.f)];
     }
 }
 
