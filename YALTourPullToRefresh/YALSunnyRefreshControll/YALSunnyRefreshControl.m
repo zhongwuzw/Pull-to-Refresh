@@ -71,6 +71,7 @@ static const CGFloat DefaultScreenWidth = 320.f;
     refreshControl.target = target;
     refreshControl.action = refreshAction;
     [scrollView setDelegate:refreshControl];
+    //开始的refreshControl的高度为0，即不显示出来
     [refreshControl setFrame:CGRectMake(0.f,
                                         0.f,
                                         scrollView.frame.size.width,
@@ -98,6 +99,7 @@ static const CGFloat DefaultScreenWidth = 320.f;
 
 -(void)calculateShift{
 
+    //注意这里用到的一个技巧
     [self setFrame:CGRectMake(0.f,
                               0.f,
                               self.scrollView.frame.size.width,
@@ -179,6 +181,7 @@ static const CGFloat DefaultScreenWidth = 320.f;
     if(buildigsScaleRatio <= BuildingsMaximumScale){
         
         CGFloat extraOffset = ABS(self.scrollView.contentOffset.y) - DefaultHeight;
+        //building图片还有一个相对父视图的top的自动布局约束，通过调整它的高度的约束，因为有相对于父视图top的约束，这时building的top跟父视图的top是不会改变的，building的bottom会往下移，当往下滑tableview的时候
         self.buildingsHeightConstraint.constant = BuildingDefaultHeight + extraOffset;
         [self.buildingsImageView setTransform:CGAffineTransformMakeScale(buildigsScaleRatio,1.f)];
         
