@@ -97,6 +97,7 @@ static const CGFloat DefaultScreenWidth = 320.f;
     [self calculateShift];
 }
 
+//当table view往下滑的时候，如刷新操作，你松开手指的时候table view就会自动弹回到原处，为了让其回到DefaultHeight并定住，使用了table view的contentinset方法。
 -(void)calculateShift{
 
     //注意这里用到的一个技巧,当往下滑动tableview时，self.scrollView.contentOffset.y为负值，将其赋给self的高度会有带来两个效果，一是其高度变为abs（self.scrollView.contentOffset.y），二是其会相对父视图移动self.scrollView.contentOffset.y，即最后self在父视图中的y的位置为0.f（0.f是这个setFrame设置的origin的y值）+self.scrollView.contentOffset.y
